@@ -25,7 +25,13 @@ sqlc:
 	docker run --rm -v $(pwd):/src -w /src kjconroy/sqlc generate
 	# sqlc generate
 
+mockgenstore:
+	mockgen -package mockdb -destination src/db/mock/store.go  github.com/morka17/shiny_bank/v1/src/db/sqlc Store
+
+server:
+	go run main.go
+
 test:
 	go test -v -cover ./...
 
-.PHONY: postgres createdb dropdb
+.PHONY: postgres createdb dropdb migrateup migratedown sqlc test server

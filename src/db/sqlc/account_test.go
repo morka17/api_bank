@@ -17,7 +17,12 @@ var (
 )
 
 func init() {
-	conn, err := sql.Open(dbDriver, dbSource)
+	config, err := utils.LoadConfig("../..")
+	if err != nil {
+		log.Fatalf("Failed to load config %v", err)
+	}
+
+	conn, err := sql.Open(config.DBDriver, config.DBSource)
 	if err != nil {
 		log.Fatalf("Expected no error, but found %v", err)
 	}
@@ -27,6 +32,8 @@ func init() {
 }
 
 func CreateRandomAccount(t *testing.T) Account {
+
+
 
 	arg := CreateAccountParams{
 		Owner:    utils.RandomOwner(),

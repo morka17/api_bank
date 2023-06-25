@@ -5,17 +5,18 @@ import (
 	"testing"
 
 	_ "github.com/lib/pq"
-)
-
-const (
-	dbDriver = "postgres"
-	dbSource = "postgresql://root:secret@localhost:5432/shiny_bank?sslmode=disable"
+	"github.com/morka17/shiny_bank/v1/src/utils"
 )
 
 var testQueries1 *Queries
 
 func ConnectDB(t *testing.T) *sql.DB {
-	conn, err := sql.Open(dbDriver, dbSource)
+	config, err := utils.LoadConfig("../..")
+	if err != nil {
+		t.Errorf("Failed to load config %v", err)
+	}
+
+	conn, err := sql.Open(config.DBDriver, config.DBSource)
 
 	if err != nil {
 		t.Errorf("Expected no error, %v", err)

@@ -128,7 +128,7 @@ func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]A
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Account
+	items := []Account{}
 	for rows.Next() {
 		var i Account
 		if err := rows.Scan(
@@ -149,6 +149,31 @@ func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]A
 		return nil, err
 	}
 	return items, nil
+}
+
+const removeAccountBalance = `-- name: RemoveAccountBalance :one
+UPDATE accounts 
+SET balance = balance -  $1
+WHERE id = $2
+RETURNING id, owner, balance, currency, created_at
+`
+
+type RemoveAccountBalanceParams struct {
+	Amount int64 `json:"amount"`
+	ID     int64 `json:"id"`
+}
+
+func (q *Queries) RemoveAccountBalance(ctx context.Context, arg RemoveAccountBalanceParams) (Account, error) {
+	row := q.db.QueryRowContext(ctx, removeAccountBalance, arg.Amount, arg.ID)
+	var i Account
+	err := row.Scan(
+		&i.ID,
+		&i.Owner,
+		&i.Balance,
+		&i.Currency,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const updateAccounts = `-- name: UpdateAccounts :one
