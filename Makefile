@@ -18,8 +18,15 @@ createmigrate:
 migrateup:
 	migrate -path  ./src/db/migration -database "postgresql://root:secret@localhost:5432/shiny_bank?sslmode=disable" -verbose up
 
+migrateup1:
+	migrate -path  ./src/db/migration -database "postgresql://root:secret@localhost:5432/shiny_bank?sslmode=disable" -verbose up 1
+
+
 migratedown:
 	migrate -path  src/db/migration -database "postgresql://root:secret@localhost:5432/shiny_bank?sslmode=disable" -verbose down
+
+migratedown1:
+	migrate -path  src/db/migration -database "postgresql://root:secret@localhost:5432/shiny_bank?sslmode=disable" -verbose down 1
 
 sqlc:
 	docker run --rm -v $(pwd):/src -w /src kjconroy/sqlc generate
@@ -34,4 +41,4 @@ server:
 test:
 	go test -v -cover ./...
 
-.PHONY: postgres createdb dropdb migrateup migratedown sqlc test server
+.PHONY: postgres createdb dropdb migrateup migrateup1 migratedown1 migratedown sqlc test server
