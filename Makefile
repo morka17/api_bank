@@ -41,4 +41,4 @@ server:
 test:
 	go test -v -cover ./...
 
-.PHONY: postgres createdb dropdb migrateup migrateup1 migratedown1 migratedown sqlc test server
+.PHONY: postgres mockgenstore createdb dropdb migrateup migrateup1 migratedown1 migratedown sqlc test server

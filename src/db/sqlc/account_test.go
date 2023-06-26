@@ -17,7 +17,7 @@ var (
 )
 
 func init() {
-	config, err := utils.LoadConfig("../..")
+	config, err := utils.LoadConfig("../../..")
 	if err != nil {
 		log.Fatalf("Failed to load config %v", err)
 	}
@@ -33,10 +33,11 @@ func init() {
 
 func CreateRandomAccount(t *testing.T) Account {
 
+	user := CreateRandomUser(t)
 
 
 	arg := CreateAccountParams{
-		Owner:    utils.RandomOwner(),
+		Owner:   user.Username,
 		Balance:  utils.RandomMoney(),
 		Currency: utils.RandomCurrency(),
 	}
