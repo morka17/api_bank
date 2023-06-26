@@ -8,16 +8,22 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	db "github.com/morka17/shiny_bank/v1/src/db/sqlc"
+	"github.com/morka17/shiny_bank/v1/src/token"
 )
 
 // Server serves HTTP requests for banking service.
 type Server struct {
 	store  db.Store
+	tokenMaker token.Marker
 	router *gin.Engine
 }
 
 // NewServer creates a new HTTP server and setup routing
 func NewServer(store db.Store) *Server {
+	tokenMaker, err := token.NewPasetoMaker("")
+	if err != nil {
+		return nil, err
+	}
 	server := &Server{store: store}
 	router := gin.Default()
 
