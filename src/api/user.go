@@ -11,6 +11,16 @@ import (
 	"github.com/morka17/shiny_bank/v1/src/utils"
 )
 
+type loginUserRequest struct {
+	Username string `json:"username" binding:"required,alphanum"`
+	Password string `json:"password" binding:"required"`
+}
+
+type loginUserResponse struct {
+	User  createUserResponse `json:"user"`
+	Token string             `json:"access_token"`
+}
+
 type createUserRequest struct {
 	Username string `json:"username" binding:"required,alphanum"`
 	Password string `json:"password" binding:"required,min=6"`
@@ -34,6 +44,16 @@ type getUserRequest struct {
 type listUserRequest struct {
 	PageID   int32 `form:"page_id" binding:"required,min=1"`
 	PageSize int32 `form:"page_size" binding:"required,min=5,max=10"`
+}
+
+func newUserResponse(user db.User) createUserResponse {
+	return createUserResponse{
+		Username:          user.Username,
+		FullName:          user.FullName,
+		Email:             user.Email,
+		PasswordChangedAt: user.PasswordChangeAt,
+		CreatedAt:         user.CreatedAt,
+	}
 }
 
 func (server *Server) createUser(ctx *gin.Context) {
@@ -69,13 +89,7 @@ func (server *Server) createUser(ctx *gin.Context) {
 		return
 	}
 
-	rsp := createUserResponse{
-		Username: user.Username,
-		FullName: user.FullName,
-		Email: user.Email,
-		PasswordChangedAt: user.PasswordChangeAt,
-		CreatedAt: user.CreatedAt,
-	}
+	rsp := newUserResponse(user)
 
 	ctx.JSON(http.StatusCreated, rsp)
 }
@@ -97,12 +111,48 @@ func (server *Server) GetUser(ctx *gin.Context) {
 		return
 	}
 
-	rsp := createUserResponse{
-		Username: user.Username,
-		FullName: user.FullName,
-		Email: user.Email,
-		PasswordChangedAt: user.PasswordChangeAt,
-		CreatedAt: user.CreatedAt,
+	rsp := newUserResponse(user)
+
+	ctx.JSON(http.StatusOK, rsp)
+}
+
+func (server *Server) loginUser(ctx *gin.Context) {
+	var req loginUserRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	user, err := server.store.GetUser(ctx.Request.Context(), req.Username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	// Check password
+	err = utils.CheckPassword(req.Password, user.HashedPassword)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	accessToken, err := server.tokenMaker.CreateToken(
+		user.Username,
+		server.config.AccessTokenDuration,
+	)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	rsp := loginUserResponse{
+		User:  newUserResponse(user),
+		Token: accessToken,
 	}
 
 	ctx.JSON(http.StatusOK, rsp)
