@@ -16,10 +16,10 @@ import (
 
 // Server serves HTTP requests for banking service.
 type Server struct {
-	config utils.Config
-	store  db.Store
+	config     utils.Config
+	store      db.Store
 	tokenMaker token.Maker
-	router *gin.Engine
+	router     *gin.Engine
 }
 
 // NewServer creates a new HTTP server and setup routing
@@ -29,29 +29,38 @@ func NewServer(config utils.Config, store db.Store) (*Server, error) {
 		return nil, fmt.Errorf("cannot creare token maker: %v", err)
 	}
 	server := &Server{
-		config: config,
-		store: store,
+		config:     config,
+		store:      store,
 		tokenMaker: tokenMaker,
 	}
-	router := gin.Default()
-
+	
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("currency", validCurrency)
 	}
 
-	router.POST("/accounts", server.createAccount)
-	router.GET("/accounts/:id", server.GetAccount)
-	router.GET("/accounts", server.ListAccount)
-	router.PUT("/accounts", server.updateAccount)
-	router.DELETE("/accounts/:id", server.DeleteAccount)
+	server.setupRouter()
 
-	router.POST("/transfers", server.createTransfer)
+	
+	return server, nil
+}
+
+func (server *Server) setupRouter() {
+	router := gin.Default()
 
 	router.POST("/users", server.createUser)
 	router.POST("/users/login", server.loginUser)
 
+	authRouters := router.Group("/").Use(AuthMiddleware(server.tokenMaker))
+
+	authRouters.POST("/accounts", server.createAccount)
+	authRouters.GET("/accounts/:id", server.GetAccount)
+	authRouters.GET("/accounts", server.ListAccount)
+	authRouters.PUT("/accounts", server.updateAccount)
+	authRouters.DELETE("/accounts/:id", server.DeleteAccount)
+
+	authRouters.POST("/transfers", server.createTransfer)
 	server.router = router
-	return server, nil 
+
 }
 
 // Start runs the HTTP server on a specific address.
