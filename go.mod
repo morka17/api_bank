@@ -1,6 +1,6 @@
 module github.com/morka17/shiny_bank/v1
 
-go 1.17
+go 1.20
 
 require (
 	github.com/gin-gonic/gin v1.9.1
@@ -11,6 +11,7 @@ require (
 require github.com/golang/mock v1.6.0
 
 require (
+	github.com/aead/chacha20poly1305 v0.0.0-20170617001512-233f39982aeb
 	github.com/go-playground/validator/v10 v10.14.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/uuid v1.3.0
@@ -21,7 +22,6 @@ require (
 
 require (
 	github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da // indirect
-	github.com/aead/chacha20poly1305 v0.0.0-20170617001512-233f39982aeb // indirect
 	github.com/aead/poly1305 v0.0.0-20180717145839-3fee0db0b635 // indirect
 	github.com/bytedance/sonic v1.9.1 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
