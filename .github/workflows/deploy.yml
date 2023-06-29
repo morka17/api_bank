@@ -16,6 +16,7 @@ jobs:
     steps:
     - name: Check out code 
       uses: actions/checkout@v2
+
     - name: Configure AWS credentials 
       uses: aws-actions/configure-aws-credentials@v2
       with:
@@ -33,6 +34,6 @@ jobs:
         REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         REPOSITORY: shinybank
         IMAGE_TAG: ${{ github.sha }}
-        run: |
+      run: |
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
