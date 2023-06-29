@@ -1,5 +1,7 @@
 
 pwd = C:\Users\morka_joshua\StudioProjects\GoProjects\shinybank
+dburl = shine-bank.cwaywcycutdv.us-east-1.rds.amazonaws.com
+dbname=shiny-bank
 
 build:
 	CGO_ENABLED=0 GOOS=linux go build -o main
@@ -20,16 +22,16 @@ createmigrate:
 	migrate create -ext sql -dir db/migration -seq init_schema
 
 migrateup:
-	migrate -path  ./src/db/migration -database "postgresql://root:secret@localhost:5432/shiny_bank?sslmode=disable" -verbose up
+	migrate -path  ./src/db/migration -database "postgresql://root:secret@$(dburl)/$(dbname)" -verbose up
 
 migrateup1:
-	migrate -path  ./src/db/migration -database "postgresql://root:secret@localhost:5432/shiny_bank?sslmode=disable" -verbose up 1
+	migrate -path  ./src/db/migration -database "postgresql://root:secret@$(dburl)/$(dbname)" -verbose up 1
 
 migratedown:
-	migrate -path  src/db/migration -database "postgresql://root:secret@localhost:5432/shiny_bank?sslmode=disable" -verbose down
+	migrate -path  src/db/migration -database "postgresql://root:secret@$(dburl)/$(dbname)" -verbose down
 
 migratedown1:
-	migrate -path  src/db/migration -database "postgresql://root:secret@localhost:5432/shiny_bank?sslmode=disable" -verbose down 1
+	migrate -path  src/db/migration -database "postgresql://root:secret@$(dburl)/$(dbname)" -verbose down 1
 
 sqlc:
 	docker run --rm -v $(pwd):/src -w /src kjconroy/sqlc generate
