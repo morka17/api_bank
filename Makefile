@@ -1,9 +1,14 @@
 
 pwd = C:\Users\morka_joshua\StudioProjects\GoProjects\shinybank
 
-postgres: 
-	docker run --name postgres12 -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres:alpine
+build:
+	CGO_ENABLED=0 GOOS=linux go build -o main
 
+run: build 
+	@./bin/microservices2
+
+postgres: 
+	docker run --name postgres12 --network api-bank-network -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres:alpine
 
 createdb:
 	docker exec -it postgres12 createdb --username=root --owner=root shiny_bank
@@ -14,13 +19,11 @@ dropdb:
 createmigrate:
 	migrate create -ext sql -dir db/migration -seq init_schema
 
-
 migrateup:
 	migrate -path  ./src/db/migration -database "postgresql://root:secret@localhost:5432/shiny_bank?sslmode=disable" -verbose up
 
 migrateup1:
 	migrate -path  ./src/db/migration -database "postgresql://root:secret@localhost:5432/shiny_bank?sslmode=disable" -verbose up 1
-
 
 migratedown:
 	migrate -path  src/db/migration -database "postgresql://root:secret@localhost:5432/shiny_bank?sslmode=disable" -verbose down
@@ -37,6 +40,20 @@ mockgenstore:
 
 server:
 	go run main.go
+
+docker:
+	docker build -t shinybank:latest .	
+
+dockerContainer:
+	docker run --name shinybank --network api-bank-network -p 8080:8080 -e GIN_MODE=release -e DB_Source="postgresql://root:secret@postgres12:5432/shiny_bank?sslmode=disable" shinybank:latest 
+
+createdockernetwork:
+	docker network create api-bank-network
+
+connectdockernetwork:
+	docker network connect api-bank-network postgres12
+
+
 
 test:
 	go test -v -cover ./...
