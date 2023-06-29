@@ -1,6 +1,12 @@
 
 pwd = C:\Users\morka_joshua\StudioProjects\GoProjects\shinybank
 
+build:
+	CGO_ENABLED=0 GOOS=linux go build -o main
+
+run: build 
+	@./bin/microservices2
+
 postgres: 
 	docker run --name postgres12 --network api-bank-network -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres:alpine
 
@@ -36,7 +42,10 @@ server:
 	go run main.go
 
 docker:
-	docker run --name shinybank --network api-bank-network -p 8080:8080 -e GIN_MODE=release -e DB_Source="postgresql://root:secret@postgres12:5432/shiny_bank?sslmode=disable" shinybank:lastest 
+	docker build -t shinybank:latest .	
+
+dockerContainer:
+	docker run --name shinybank --network api-bank-network -p 8080:8080 -e GIN_MODE=release -e DB_Source="postgresql://root:secret@postgres12:5432/shiny_bank?sslmode=disable" shinybank:latest 
 
 createdockernetwork:
 	docker network create api-bank-network
