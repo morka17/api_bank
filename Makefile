@@ -44,6 +44,12 @@ sqlc:
 mockgenstore:
 	mockgen -package mockdb -destination src/db/mock/store.go  github.com/morka17/shiny_bank/v1/src/db/sqlc Store
 
+db_docs:
+	dbdocs build doc/db.dbml
+
+db_schema:
+	dbml2sql --postgres -o doc/schema.sql doc/db.dbml
+
 server:
 	go run main.go
 
@@ -59,9 +65,13 @@ createdockernetwork:
 connectdockernetwork:
 	docker network connect api-bank-network postgres12
 
-
+proto:	
+	rm -f src/pb/*.go
+	protoc --proto_path=proto --go_out=./src/pb --go_opt=paths=source_relative \
+	--go-grpc_out=./src/pb  --go-grpc_opt=paths=source_relative  \
+	proto/*.proto
 
 test:
 	go test -v -cover ./...
 
-.PHONY: postgres mockgenstore createdb dropdb migrateup migrateup1 migratedown1 migratedown sqlc test server
+.PHONY: postgres mockgenstore createdb db_docs db_schema dropdb migrateup migrateup1 migratedown1 migratedown sqlc test server proto

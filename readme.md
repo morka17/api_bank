@@ -32,8 +32,10 @@ migrate create -ext sql -dir db/migration -seq init_schema
 
 >  ### 4.  Durability (D)
 > Data written  by a successful transaction must be recorded in persistent storage.
+>
 
-
+## DBML Docs page
+https://dbdocs.io/joshuamorka4/shiny_bank_project?schema=public&view=relationships&table=accounts
 
 
 ### Mock Database 

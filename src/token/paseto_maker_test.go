@@ -18,7 +18,7 @@ func TestPasetoMaker(t *testing.T) {
 	issuedAt := time.Now()
 	expiredAt := issuedAt.Add(duration)
 
-	token, err := maker.CreateToken(username, duration)
+	token, _, err := maker.CreateToken(username, duration)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, token)
 
@@ -39,7 +39,7 @@ func TestExpiredPasetoToken(t *testing.T) {
 	username := utils.RandomOwner()
 	duration := -time.Minute
 
-	token, err := maker.CreateToken(username, duration)
+	token, _, err := maker.CreateToken(username, duration)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, token)
 

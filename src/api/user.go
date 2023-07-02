@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 	db "github.com/morka17/shiny_bank/v1/src/db/sqlc"
 	"github.com/morka17/shiny_bank/v1/src/utils"
@@ -17,8 +18,12 @@ type loginUserRequest struct {
 }
 
 type loginUserResponse struct {
+	SessionID	uuid.UUID `json:session_id"`
 	User  createUserResponse `json:"user"`
 	Token string             `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	AccessTokenExpiresAt time.Time `json:"access_token_expires_at`
+	RefreshTokenExpiresAt time.Time `json:"refresh_token_expires_at`
 }
 
 type createUserRequest struct {
@@ -140,7 +145,7 @@ func (server *Server) loginUser(ctx *gin.Context) {
 		return
 	}
 
-	accessToken, err := server.tokenMaker.CreateToken(
+	accessToken, accessTokenPayload, err := server.tokenMaker.CreateToken(
 		user.Username,
 		server.config.AccessTokenDuration,
 	)
@@ -150,7 +155,7 @@ func (server *Server) loginUser(ctx *gin.Context) {
 		return
 	}
 
-	refreshToken, err := server.tokenMaker.CreateToken(
+	refreshToken, payload, err := server.tokenMaker.CreateToken(
 		user.Username,
 		server.config.RefreshTokenDuration,
 	)
@@ -159,14 +164,23 @@ func (server *Server) loginUser(ctx *gin.Context) {
 		return
 	}
 
-	server.store.CreateSession(ctx, db.CreateSessionParams{
-		ID: ,
+	session, err := server.store.CreateSession(ctx, db.CreateSessionParams{
+		ID: payload.ID,
+		Username: payload.Username,
+		UserAgent: ctx.Request.UserAgent(),
+		ClientIp: ctx.ClientIP(),
+		IsBlocked: false,
+		ExpiresAt: payload.ExpiredAt,
 	})
 
 
 
 
 	rsp := loginUserResponse{
+		SessionID: session.ID,
+		AccessTokenExpiresAt: accessTokenPayload.ExpiredAt,
+		RefreshToken: refreshToken,
+		RefreshTokenExpiresAt: payload.ExpiredAt,
 		User:  newUserResponse(user),
 		Token: accessToken,
 	}
