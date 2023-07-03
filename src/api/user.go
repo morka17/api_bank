@@ -18,12 +18,12 @@ type loginUserRequest struct {
 }
 
 type loginUserResponse struct {
-	SessionID	uuid.UUID `json:session_id"`
+	SessionID	uuid.UUID `json:"session_id"`
 	User  createUserResponse `json:"user"`
 	Token string             `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
-	AccessTokenExpiresAt time.Time `json:"access_token_expires_at`
-	RefreshTokenExpiresAt time.Time `json:"refresh_token_expires_at`
+	AccessTokenExpiresAt time.Time `json:"access_token_expires_at"`
+	RefreshTokenExpiresAt time.Time `json:"refresh_token_expires_at"`
 }
 
 type createUserRequest struct {

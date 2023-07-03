@@ -5,7 +5,7 @@ package pb;
 import "user.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/morka17/shiny_bank/v1/src/pb";
+option go_package = "github.com/morka17/shiny_bank/v1/pb";
 
 
 message  LoginUserRequest {

@@ -66,10 +66,16 @@ connectdockernetwork:
 	docker network connect api-bank-network postgres12
 
 proto:	
-	rm -f src/pb/*.go
-	protoc --proto_path=proto --go_out=./src/pb --go_opt=paths=source_relative \
-	--go-grpc_out=./src/pb  --go-grpc_opt=paths=source_relative  \
-	proto/*.proto
+	rm -f pb/*.go
+	# protoc --proto_path=proto --go_out=pb --go_opt=paths=source_relative \
+	# --go-grpc_out=pb  --go-grpc_opt=paths=source_relative  \
+	# --go-gateway_out=pb --grpc-gateway_opt=paths=source_relative \
+	# proto/*.proto
+	protoc -I ./proto \
+  	--go_out ./pb --go_opt paths=source_relative \
+  	--go-grpc_out ./pb --go-grpc_opt paths=source_relative \
+  	--grpc-gateway_out ./pb --grpc-gateway_opt paths=source_relative \
+  	./proto/*.proto
 
 test:
 	go test -v -cover ./...
