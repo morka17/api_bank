@@ -1,19 +1,25 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"log"
+	"net"
+	"net/http"
+
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 
 	_ "github.com/lib/pq"
+	"github.com/morka17/shiny_bank/v1/pb"
 	"github.com/morka17/shiny_bank/v1/src/api"
 	db "github.com/morka17/shiny_bank/v1/src/db/sqlc"
+	"github.com/morka17/shiny_bank/v1/src/gapi"
 	"github.com/morka17/shiny_bank/v1/src/utils"
 )
 
-
-
-
-func main()  {
+func main() {
 
 	config, err := utils.LoadConfig(".")
 	if err != nil {
@@ -26,15 +32,82 @@ func main()  {
 	}
 
 	store := db.NewStore(conn)
-	server, err := api.NewServer(config, store)
+
+	go runGatewayServer(config, store)
+
+	runGrpcServer(config, store)
+
+}
+
+func runGrpcServer(config utils.Config, store db.Store) {
+	server, err := gapi.NewServer(config, store)
 	if err != nil {
-		log.Fatalf("Cannot create server: %v",err)
+		log.Fatal("Cannot create server: ", err)
 	}
 
-	err = server.Start(config.ServerAddress)
+	grpcServer := grpc.NewServer()
+	pb.RegisterSimpleBankServer(grpcServer, server)
+	reflection.Register(grpcServer) // For client exploiration
+
+	listener, err := net.Listen("tcp", config.GRPCServerAddress)
+	if err != nil {
+		log.Fatal("cannot create listener", err)
+	}
+
+	log.Printf("start gRPC server at %s", listener.Addr().String())
+	err = grpcServer.Serve(listener)
+	if err != nil {
+		log.Fatal("cannot create server:", err)
+	}
+
+}
+
+func runGinServer(config utils.Config, store db.Store) {
+	server, err := api.NewServer(config, store)
+	if err != nil {
+		log.Fatalf("Cannot create server: %v", err)
+	}
+
+	err = server.Start(config.HTTPServerAddress)
 	if err != nil {
 		log.Fatal("cannot start server:", err)
 	}
 
 }
 
+
+func runGatewayServer(config utils.Config, store db.Store) {
+	server, err := gapi.NewServer(config, store)
+	if err != nil {
+		log.Fatal("Cannot create server: ", err)
+	}
+
+	grpcMux := runtime.NewServeMux()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	err = pb.RegisterSimpleBankHandlerServer(ctx, grpcMux, server)
+	if err != nil {
+		log.Fatal("cannot register handler server:", err )
+	}
+
+	mux := http.NewServeMux()
+	mux.Handle("/", grpcMux)
+
+	fs := http.FileServer(http.Dir("./doc/swagger"))
+	mux.Handle("/swagger/", http.StripPrefix("/swagger/", fs))
+
+
+	listener, err := net.Listen("tcp", config.HTTPServerAddress)
+	if err != nil {
+		log.Fatal("cannot create listener: ", err)
+	}
+
+	log.Printf("start HTTP server at %s", listener.Addr().String())
+	err = http.Serve(listener, mux)
+	if err != nil {
+		log.Fatal("cannot http gateway server:", err)
+	}
+
+}

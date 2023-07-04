@@ -1,5 +1,8 @@
 
 pwd = C:\Users\morka_joshua\StudioProjects\GoProjects\shinybank
+# dburl = shine-bank.cwaywcycutdv.us-east-1.rds.amazonaws.com
+dburl = localhost:5432
+dbname=shiny_bank
 
 build:
 	CGO_ENABLED=0 GOOS=linux go build -o main
@@ -20,16 +23,19 @@ createmigrate:
 	migrate create -ext sql -dir db/migration -seq init_schema
 
 migrateup:
-	migrate -path  ./src/db/migration -database "postgresql://root:secret@localhost:5432/shiny_bank?sslmode=disable" -verbose up
+	migrate -path  ./src/db/migration -database "postgresql://root:secret@$(dburl)/$(dbname)?sslmode=disable" -verbose up
 
 migrateup1:
-	migrate -path  ./src/db/migration -database "postgresql://root:secret@localhost:5432/shiny_bank?sslmode=disable" -verbose up 1
+	migrate -path  ./src/db/migration -database "postgresql://root:secret@$(dburl)/$(dbname)?sslmode=disable" -verbose up 1
+
+migrateup2:
+	migrate -path  ./src/db/migration -database "postgresql://root:secret@$(dburl)/$(dbname)?sslmode=disable" -verbose up 2
 
 migratedown:
-	migrate -path  src/db/migration -database "postgresql://root:secret@localhost:5432/shiny_bank?sslmode=disable" -verbose down
+	migrate -path  src/db/migration -database "postgresql://root:secret@$(dburl)/$(dbname)?sslmode=disable" -verbose down
 
 migratedown1:
-	migrate -path  src/db/migration -database "postgresql://root:secret@localhost:5432/shiny_bank?sslmode=disable" -verbose down 1
+	migrate -path  src/db/migration -database "postgresql://root:secret@$(dburl)/$(dbname)?sslmode=disable" -verbose down 1
 
 sqlc:
 	docker run --rm -v $(pwd):/src -w /src kjconroy/sqlc generate
@@ -37,6 +43,12 @@ sqlc:
 
 mockgenstore:
 	mockgen -package mockdb -destination src/db/mock/store.go  github.com/morka17/shiny_bank/v1/src/db/sqlc Store
+
+db_docs:
+	dbdocs build doc/db.dbml
+
+db_schema:
+	dbml2sql --postgres -o doc/schema.sql doc/db.dbml
 
 server:
 	go run main.go
@@ -53,9 +65,21 @@ createdockernetwork:
 connectdockernetwork:
 	docker network connect api-bank-network postgres12
 
-
+proto:	
+	rm -f pb/*.go
+	rm -f doc/swagger/*.swagger.json
+	# protoc --proto_path=proto --go_out=pb --go_opt=paths=source_relative \
+	# --go-grpc_out=pb  --go-grpc_opt=paths=source_relative  \
+	# --go-gateway_out=pb --grpc-gateway_opt=paths=source_relative \
+	# proto/*.proto
+	protoc -I ./proto \
+  	--go_out ./pb --go_opt paths=source_relative \
+  	--go-grpc_out ./pb --go-grpc_opt paths=source_relative \
+  	--grpc-gateway_out ./pb --grpc-gateway_opt paths=source_relative \
+	--openapiv2_out ./doc/swagger --openapiv2_opt allow_merge=true,merge_file_name=shiny_bank\
+  	./proto/*.proto
 
 test:
 	go test -v -cover ./...
 
-.PHONY: postgres mockgenstore createdb dropdb migrateup migrateup1 migratedown1 migratedown sqlc test server
+.PHONY: postgres mockgenstore createdb db_docs db_schema dropdb migrateup migrateup1 migratedown1 migratedown sqlc test server proto
