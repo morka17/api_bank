@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	
 	"log"
 	"net"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"github.com/rakyll/statik/fs"
 
 	_ "github.com/lib/pq"
 	"github.com/morka17/shiny_bank/v1/pb"
@@ -17,6 +19,7 @@ import (
 	db "github.com/morka17/shiny_bank/v1/src/db/sqlc"
 	"github.com/morka17/shiny_bank/v1/src/gapi"
 	"github.com/morka17/shiny_bank/v1/src/utils"
+	_ "github.com/morka17/shiny_bank/v1/doc/statik"
 )
 
 func main() {
@@ -95,8 +98,14 @@ func runGatewayServer(config utils.Config, store db.Store) {
 	mux := http.NewServeMux()
 	mux.Handle("/", grpcMux)
 
-	fs := http.FileServer(http.Dir("./doc/swagger"))
-	mux.Handle("/swagger/", http.StripPrefix("/swagger/", fs))
+	statikFS, err := fs.New()
+	if err != nil {
+		log.Fatal("cannot create statik fs", err)
+	}
+
+	swaggerHandler := http.StripPrefix("/swagger/", http.FileServer(statikFS))
+
+	mux.Handle("/swagger/", swaggerHandler)
 
 
 	listener, err := net.Listen("tcp", config.HTTPServerAddress)
