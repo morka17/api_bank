@@ -16,10 +16,18 @@ import (
 )
 
 func (server *Server) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest) (*pb.UpdateUserResponse, error) {
+	authPayload, err := server.authorizeUser(ctx)
+	if err != nil {
+		return nil, unauthenticatedError(err)
+	}
 
 	violations := validateUpdateUserRequest(req)
 	if violations != nil {
 		return nil, invalidArgumentError(violations)
+	}
+
+	if authPayload.Username  != req.GetUsername() {
+		return nil, status.Errorf(codes.PermissionDenied, "cannot update other user's info")
 	}
 
 	arg := db.UpdateUserParams{
@@ -39,7 +47,7 @@ func (server *Server) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "Failed to hash password: %s", err)
 		}
-
+ 
 		arg.HashedPassword = sql.NullString{
 			String: hashedPassword,
 			Valid:  true,
@@ -90,4 +98,9 @@ func validateUpdateUserRequest(req *pb.UpdateUserRequest) (violations []*errdeta
 	}
 
 	return violations
+}
+
+
+func unauthenticatedError(err error) error {
+	return status.Errorf(codes.Unauthenticated, "unauthorized :%v", err)
 }
