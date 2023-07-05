@@ -30,7 +30,7 @@ func main() {
 
 	config, err := utils.LoadConfig(".")
 	if err != nil {
-		log.Fatal().Msgf("cannot load config:", err)
+		log.Fatal().Msgf("cannot load config: %v", err)
 	}
 
 	if config.Environment == "development" {
@@ -57,11 +57,11 @@ func main() {
 func runDBMigration(migrationURL string, dbSource string) {
 	migration, err := migrate.New(migrationURL, dbSource)
 	if err != nil {
-		log.Fatal().Msgf("cannot createa a new migrate instance ", err)
+		log.Fatal().Msgf("cannot createa a new migrate instance %v", err)
 	}
 
 	if err = migration.Up(); err != nil && err != migrate.ErrNoChange {
-		log.Fatal().Msgf("Failed to run migrate up: ", err)
+		log.Fatal().Msgf("Failed to run migrate up: %v", err)
 	}
 
 	log.Info().Msg("Database migrated successful")
@@ -70,7 +70,7 @@ func runDBMigration(migrationURL string, dbSource string) {
 func runGrpcServer(config utils.Config, store db.Store) {
 	server, err := gapi.NewServer(config, store)
 	if err != nil {
-		log.Fatal().Msgf("Cannot create server: ", err)
+		log.Fatal().Msgf("Cannot create server: %v", err)
 	}
 
 	grpc.UnaryInterceptor(gapi.GrpcLogger)
@@ -80,13 +80,13 @@ func runGrpcServer(config utils.Config, store db.Store) {
 
 	listener, err := net.Listen("tcp", config.GRPCServerAddress)
 	if err != nil {
-		log.Fatal().Msgf("cannot create listener", err)
+		log.Fatal().Msgf("cannot create listener: %v", err)
 	}
 
 	log.Info().Msgf("start gRPC server at %s", listener.Addr().String())
 	err = grpcServer.Serve(listener)
 	if err != nil {
-		log.Fatal().Msgf("cannot create server:", err)
+		log.Fatal().Msgf("cannot create server: %v", err)
 	}
 
 }
@@ -99,7 +99,7 @@ func runGinServer(config utils.Config, store db.Store) {
 
 	err = server.Start(config.HTTPServerAddress)
 	if err != nil {
-		log.Fatal().Msgf("cannot start server:", err)
+		log.Fatal().Msgf("cannot start server: %v", err)
 	}
 
 }
@@ -107,7 +107,7 @@ func runGinServer(config utils.Config, store db.Store) {
 func runGatewayServer(config utils.Config, store db.Store) {
 	server, err := gapi.NewServer(config, store)
 	if err != nil {
-		log.Fatal().Msgf("Cannot create server: ", err)
+		log.Fatal().Msgf("Cannot create server: %v", err)
 	}
 
 	grpcMux := runtime.NewServeMux()
@@ -117,7 +117,7 @@ func runGatewayServer(config utils.Config, store db.Store) {
 
 	err = pb.RegisterSimpleBankHandlerServer(ctx, grpcMux, server)
 	if err != nil {
-		log.Fatal().Msgf("cannot register handler server:", err)
+		log.Fatal().Msgf("cannot register handler server: %v", err)
 	}
 
 	mux := http.NewServeMux()
@@ -125,7 +125,7 @@ func runGatewayServer(config utils.Config, store db.Store) {
 
 	statikFS, err := fs.New()
 	if err != nil {
-		log.Fatal().Msgf("cannot create statik fs", err)
+		log.Fatal().Msgf("cannot create statik fs %v", err)
 	}
 
 	swaggerHandler := http.StripPrefix("/swagger/", http.FileServer(statikFS))
@@ -134,13 +134,16 @@ func runGatewayServer(config utils.Config, store db.Store) {
 
 	listener, err := net.Listen("tcp", config.HTTPServerAddress)
 	if err != nil {
-		log.Fatal().Msgf("cannot create listener: ", err)
+		log.Fatal().Msgf("cannot create listener: %v", err)
 	}
 
 	log.Printf("start HTTP server at %s", listener.Addr().String())
-	err = http.Serve(listener, mux)
+	handler := gapi.HttpLogger(mux)
+	err = http.Serve(listener, handler)
 	if err != nil {
-		log.Fatal().Msgf("cannot http gateway server:", err)
+		log.Fatal().Msgf("cannot http gateway server: %v", err)
 	}
 
 }
+
+
