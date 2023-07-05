@@ -62,7 +62,7 @@ func validateCreateUserRequest(req *pb.CreateUserRequest) (violations []*errdeta
 	}
 
 	if	err :=  validator.ValidateFullName(req.GetFullName()); err != nil {
-		violations = append(violations, fieldViolation("full name", err))
+		violations = append(violations, fieldViolation("fulll", err))
 	}
 
 	if	err :=  validator.ValidateEmail(req.GetEmail()); err != nil {
