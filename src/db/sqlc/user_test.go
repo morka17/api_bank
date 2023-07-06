@@ -73,53 +73,90 @@ func TestGetUser(t *testing.T) {
 	assert.WithinDuration(t, user2.CreatedAt, user.CreatedAt, time.Second)
 }
 
-// func TestUpdateAccount(t *testing.T){
 
-// 	account1 := CreateRandomAccount(t)
 
-// 	arg := UpdateAccountsParams {
-// 		ID: account1.ID,
-// 		Balance: utils.RandomMoney(),
-// 	}
 
-// 	account2, err := testQueries.UpdateAccounts(context.Background(), arg)
-// 	assert.NoError(t, err)
-// 	assert.NotEmpty(t, account2)
+func TestUpdateUserOnlyFullName(t *testing.T){
+	oldUser := CreateRandomUser(t)
+	
+	newFullName := utils.RandomOwner()
+	updated, err := testQueries.UpdateUser(context.Background(), UpdateUserParams{
+		Username: oldUser.Username,
+		FullName: sql.NullString{
+			String: newFullName,
+			Valid: true,
+		},
+	})
 
-// 	assert.Equal(t, account1.ID, account2.ID)
-// 	assert.Equal(t, account1.Owner, account2.Owner)
-// 	assert.Equal(t, arg.Balance, account2.Balance)
-// 	assert.Equal(t, account1.Currency, account2.Currency)
-// 	assert.WithinDuration(t, account1.CreatedAt, account1.CreatedAt, time.Second)
-// }
+	assert.NoError(t, err)
+	assert.NotEmpty(t, updated.FullName, newFullName)
+	assert.Equal(t, newFullName, updated.FullName)
+}
 
-// func TestDeleteAccount(t *testing.T){
-// 	account1 := CreateRandomAccount(t)
-// 	err := testQueries.DeleteAccount(context.Background(), account1.ID)
-// 	assert.NoError(t, err)
 
-// 	account2, err := testQueries.GetAccount(context.Background(), account1.ID)
-// 	assert.Error(t, err)
-// 	assert.Empty(t, account2)
-// }
+func TestUpdateUserOnlyEmail(t *testing.T){
+	oldUser := CreateRandomUser(t)
+	
+	email := utils.RandomEmail()
+	updated, err := testQueries.UpdateUser(context.Background(), UpdateUserParams{
+		Username: oldUser.Username,
+		Email: sql.NullString{
+			String: email,
+			Valid: true,
+		},
+	})
 
-// func TestListAccounts(t *testing.T){
+	assert.NoError(t, err)
+	assert.NotEmpty(t, updated.Email, oldUser.Email)
+	assert.Equal(t, email, updated.Email)
+}
 
-// 	for i := 0; i < 10; i++ {
-// 		CreateRandomAccount(t)
-// 	}
+func TestUpdateUserOnlyHashPassword(t *testing.T){
+	oldUser := CreateRandomUser(t)
+	
+	hashPassword, _ := utils.HashPassword("12345676")
+	updated, err := testQueries.UpdateUser(context.Background(), UpdateUserParams{
+		Username: oldUser.Username,
+		HashedPassword: sql.NullString{
+			String: hashPassword,
+			Valid: true,
+		},
+	})
 
-// 	arg := ListAccountsParams{
-// 		Limit: 5,
-// 		Offset: 5,
-// 	}
+	assert.NoError(t, err)
+	assert.NotEmpty(t, updated.HashedPassword, oldUser.HashedPassword)
+	assert.Equal(t, hashPassword, updated.HashedPassword)
+}
 
-// 	accounts, err := testQueries.ListAccounts(context.Background(), arg)
-// 	assert.NoError(t, err)
-// 	assert.Len(t, accounts, 5)
 
-// 	for _, account := range accounts {
-// 		assert.NotEmpty(t, account)
-// 	}
 
-// }
+func TestUpdateUserOnlyAllField(t *testing.T){
+	oldUser := CreateRandomUser(t)
+	
+	hashPassword, _ := utils.HashPassword("12345676")
+	newFull := utils.RandomOwner()
+	email := utils.RandomEmail()
+	updated, err := testQueries.UpdateUser(context.Background(), UpdateUserParams{
+		Username: oldUser.Username,
+		HashedPassword: sql.NullString{
+			String: hashPassword,
+			Valid: true,
+		},
+		Email: sql.NullString{
+			String: email,
+			Valid: true,
+		},
+		FullName: sql.NullString{
+			String: newFull,
+			Valid: true,
+		},
+	})
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, updated.HashedPassword, oldUser.HashedPassword)
+	assert.Equal(t, hashPassword, updated.HashedPassword)
+	assert.NotEmpty(t, updated.Email, oldUser.Email)
+	assert.Equal(t, email, updated.Email)
+	assert.NotEmpty(t, updated.FullName, oldUser.FullName)
+	assert.Equal(t, newFull, updated.FullName)
+}
