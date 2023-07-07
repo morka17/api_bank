@@ -88,6 +88,6 @@ redis:
 
 
 test:
-	go test -v -cover ./...
+	go test -v -cover -short ./...
 
 .PHONY: postgres mockgenstore createdb db_docs db_schema dropdb migrateup migrateup1 migratedown1 migratedown sqlc test server proto
