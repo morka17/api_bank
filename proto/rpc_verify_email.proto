@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+
+
+option go_package = "github.com/morka17/shiny_bank/v1/pb";
+
+
+
+message  VerifyEmailRequest {
+    int64 emaiil_id = 1;
+    string secret_code = 2;
+}
+
+
+message VerifyEmailResponse {
+    bool is_verified = 1;
+}

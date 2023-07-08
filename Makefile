@@ -43,6 +43,7 @@ sqlc:
 
 mockgenstore:
 	mockgen -package mockdb -destination src/db/mock/store.go  github.com/morka17/shiny_bank/v1/src/db/sqlc Store
+	mockgen -package mockwk -destination src/worker/mock/distributor.go  github.com/morka17/shiny_bank/v1/src/worker TaskDistributor 
 
 db_docs:
 	dbdocs build doc/db.dbml
