@@ -7,6 +7,8 @@ import (
 	"fmt"
 
 	"github.com/hibiken/asynq"
+	db "github.com/morka17/shiny_bank/v1/src/db/sqlc"
+	"github.com/morka17/shiny_bank/v1/src/utils"
 	"github.com/rs/zerolog/log"
 )
 
@@ -61,6 +63,31 @@ func (processor *RedisTaskProcessor) ProcessTaskSendVerifyEmail(ctx context.Cont
 				return fmt.Errorf("user doesn't exist: %v", err)
 			}
 			return fmt.Errorf("Failed to get user: %w", err)
+		}
+
+		verifyEmail, err := processor.store.CreateVerifyEmail(ctx, db.CreateVerifyEmailParams{
+			Username: payload.Username,
+			Email: user.Email,
+			SecretCode: utils.RandomString(32),
+		})
+		if err != nil {
+			return fmt.Errorf("Failed to create verify email: %v", err)
+		}
+
+
+		verifyUrl := fmt.Sprintf("http://localhost:8080/verify_email?id=%d&secret_code=%s", verifyEmail.ID, verifyEmail.SecretCode)
+
+		subject := "Welcome to shiny bank"
+		content := fmt.Sprintf(`Hello %s, <br/>
+		Thank you for registering with us! <br/>
+		Please <a href="%s"> click here</a> to verify your email address
+		`, user.FullName, verifyUrl)
+
+		to := []string{user.Email}
+
+		err = processor.mailer.SendEmail(subject, content, to, nil, nil, nil)
+		if err != nil {
+			return fmt.Errorf("Failed to send verify email: %w", err)
 		}
 
 		// TODO: send email to user 

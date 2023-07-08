@@ -20,7 +20,7 @@ dropdb:
 	docker exec -it postgres12 dropdb shiny_bank
 
 createmigrate:
-	migrate create -ext sql -dir db/migration -seq init_schema
+	migrate create -ext sql -dir ./src/db/migration -seq $(name)
 
 migrateup:
 	migrate -path  ./src/db/migration -database "postgresql://root:secret@$(dburl)/$(dbname)?sslmode=disable" -verbose up
