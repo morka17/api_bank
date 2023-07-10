@@ -3,7 +3,6 @@ FROM golang:1.16-alpine AS builder
 WORKDIR /app
 
 COPY main .
-COPY . .
 # COPY migrate.linux-amd64 . 
 
 # FROM golang:1.16-alpine AS builder 
@@ -14,12 +13,13 @@ COPY . .
 # COPY go.mod .
 # RUN go mod download
 # # Copy the source code.
-# COPY . .g
+# COPY . .
 # # Build
 # # RUN apk add curl
 # # RUN curl -L https://github.com/golang-migrate/migrate/releases/download/v4.12.2/migrate.linux-amd64.tar.gz | tar xvz
 # COPY migrate.linux-amd64 .
 # RUN CGO_ENABLED=0 GOOS=linux go build -o main main.go 
+
 
 # RUN STAGE
 FROM alpine:latest 
@@ -33,5 +33,7 @@ COPY start.sh .
 
 
 EXPOSE 8080
+EXPOSE 9090
+
 CMD ["/app/main"]
-ENTRYPOINT [ "/app/start.sh"]
+# ENTRYPOINT [ "/app/start.sh"]

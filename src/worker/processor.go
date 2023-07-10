@@ -5,6 +5,7 @@ import (
 
 	"github.com/hibiken/asynq"
 	db "github.com/morka17/shiny_bank/v1/src/db/sqlc"
+	"github.com/morka17/shiny_bank/v1/src/mail"
 	"github.com/rs/zerolog/log"
 )
 
@@ -22,9 +23,14 @@ type TaskProcessor interface {
 type RedisTaskProcessor struct {
 	server *asynq.Server
 	store  db.Store
+	mailer mail.EmailSender
 }
 
-func NewRedisTaskProcessor(redisOpt asynq.RedisClientOpt, store db.Store) TaskProcessor {
+func NewRedisTaskProcessor(redisOpt asynq.RedisClientOpt, store db.Store, mailer mail.EmailSender) TaskProcessor {
+	logger := NewLogger()
+	// redis.SetLogger(logger)
+
+	
 	server := asynq.NewServer(
 		redisOpt,
 		asynq.Config{
@@ -38,7 +44,7 @@ func NewRedisTaskProcessor(redisOpt asynq.RedisClientOpt, store db.Store) TaskPr
 						Bytes("payload", task.Payload()).Msg("Process task failed")	
 				},
 			),
-			Logger: NewLogger(),
+			Logger: logger,
 		},
 		
 	)
@@ -46,6 +52,7 @@ func NewRedisTaskProcessor(redisOpt asynq.RedisClientOpt, store db.Store) TaskPr
 	return &RedisTaskProcessor{
 		server: server,
 		store:  store,
+		mailer: mailer,
 	}
 }
 

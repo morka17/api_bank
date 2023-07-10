@@ -20,7 +20,7 @@ dropdb:
 	docker exec -it postgres12 dropdb shiny_bank
 
 createmigrate:
-	migrate create -ext sql -dir db/migration -seq init_schema
+	migrate create -ext sql -dir ./src/db/migration -seq $(name)
 
 migrateup:
 	migrate -path  ./src/db/migration -database "postgresql://root:secret@$(dburl)/$(dbname)?sslmode=disable" -verbose up
@@ -43,6 +43,7 @@ sqlc:
 
 mockgenstore:
 	mockgen -package mockdb -destination src/db/mock/store.go  github.com/morka17/shiny_bank/v1/src/db/sqlc Store
+	mockgen -package mockwk -destination src/worker/mock/distributor.go  github.com/morka17/shiny_bank/v1/src/worker TaskDistributor 
 
 db_docs:
 	dbdocs build doc/db.dbml
@@ -88,6 +89,6 @@ redis:
 
 
 test:
-	go test -v -cover ./...
+	go test -v -cover -short ./...
 
 .PHONY: postgres mockgenstore createdb db_docs db_schema dropdb migrateup migrateup1 migratedown1 migratedown sqlc test server proto

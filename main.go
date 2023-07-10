@@ -22,6 +22,7 @@ import (
 	"github.com/morka17/shiny_bank/v1/src/api"
 	db "github.com/morka17/shiny_bank/v1/src/db/sqlc"
 	"github.com/morka17/shiny_bank/v1/src/gapi"
+	"github.com/morka17/shiny_bank/v1/src/mail"
 	"github.com/morka17/shiny_bank/v1/src/utils"
 	"github.com/morka17/shiny_bank/v1/src/worker"
 	"github.com/rs/zerolog"
@@ -53,17 +54,15 @@ func main() {
 	redisOpt := asynq.RedisClientOpt{
 		Addr: config.RedisAddress,
 	}
-	
+
 	taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
 
-	go runTaskProcessor(redisOpt, store)
+	go runTaskProcessor(redisOpt, store, config)
 
 	go runGatewayServer(config, store, taskDistributor)
 	runGrpcServer(config, store, taskDistributor)
 
 }
-
-
 
 // RUN database migration
 func runDBMigration(migrationURL string, dbSource string) {
@@ -158,9 +157,11 @@ func runGatewayServer(config utils.Config, store db.Store, taskDistributor worke
 
 }
 
+func runTaskProcessor(redisOpt asynq.RedisClientOpt, store db.Store, config utils.Config) {
 
-func runTaskProcessor(redisOpt asynq.RedisClientOpt, store db.Store) {
-	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, store)
+	mailer := mail.NewGmailSender(config.EmailSenderName, config.EmailSenderAddress, config.EmailSenderPassword)
+
+	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, store, mailer)
 	log.Info().Msg("start task processor")
 	err := taskProcessor.Start()
 	if err != nil {
