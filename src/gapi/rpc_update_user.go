@@ -3,6 +3,7 @@ package gapi
 import (
 	"context"
 	"database/sql"
+	"log"
 	"time"
 
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
@@ -16,6 +17,9 @@ import (
 )
 
 func (server *Server) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest) (*pb.UpdateUserResponse, error) {
+	if ctx == nil {
+		log.Panic("NIl context")
+	}
 	authPayload, err := server.authorizeUser(ctx)
 	if err != nil {
 		return nil, unauthenticatedError(err)

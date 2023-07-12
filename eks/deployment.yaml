@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shiny-bank-api-deployment
+  labels: 
+    app: shiny-bank-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: shiny-bank-api
+  template:
+    metadata:
+      labels:
+        app: shiny-bank-api
+    spec:
+      containers:
+      - name: shiny-bank-api
+        image: <Image>
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080

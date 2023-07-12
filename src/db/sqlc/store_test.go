@@ -17,7 +17,7 @@ func TestTransferTx(t *testing.T) {
 	account2 := CreateRandomAccount(t)
 
 	// Run n concurrent transfer transactions
-	n := 2
+	n := 5
 	amount := int64(10)
 
 	errs := make(chan error)
@@ -139,13 +139,13 @@ func TestTransferTxDeadlock(t *testing.T) {
 		}
 
 		go func() {
-			transResult, err := store.TransferTx(context.Background(), TransferTxParams{
+			_, err := store.TransferTx(context.Background(), TransferTxParams{
 				FromAccountID: fromAccountID,
 				ToAccountID:   toAccountID,
 				Amount:        amount,
 			})
 
-			fmt.Printf("fromAccountID: %v ToAccountID: %v\n", transResult.FromAccount.Balance, transResult.ToAccount.Balance)
+
 
 			errs <- err
 		}()

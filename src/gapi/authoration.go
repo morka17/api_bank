@@ -19,6 +19,7 @@ const (
 func (server *Server) authorizeUser(ctx context.Context) (*token.Payload, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
+		
 		return nil, fmt.Errorf("missing metadata")
 	}
 
