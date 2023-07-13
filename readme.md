@@ -1,7 +1,7 @@
 
 
 ## To Run this project 
-```json
+```
    Docker compose up
 ```
 
@@ -59,6 +59,22 @@
 36. Implemented an automatic issuance of TLS certificates in Kubernetes with Let'sencrypt
 37. Finally, automated deployment to the internet (EKS) with Github Actions
 
+
+## Instructions
+
+To use my project, you can follow these instructions:
+
+1. Clone the repository.
+2. Install the dependencies.
+3. Run the project.
+```
+   Docker compose up
+```
+
+ Project doc
+```dart 
+    http://localhost:8080/swagger
+```
 
 
 <!-- ### Postgres
